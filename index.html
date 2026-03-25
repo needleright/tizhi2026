@@ -34,13 +34,32 @@
         <button type="button" class="submit-btn" onclick="calculateResult()">查看辨识结果</button>
     </form>
 
-    <div id="resultArea">
-        <h2 style="color: var(--primary-color); text-align: center;">辨识结论</h2>
-        <div id="scoreDetails"></div>
-        <hr>
-        <p style="font-size: 14px; color: #666;">*注：本结论基于 GB/T 46939-2025 标准计算。请咨询社区中医师进行专业解读。</p>
-        <button onclick="window.print()" style="padding: 5px 15px;">打印报告</button>
+    <div id="resultArea" style="display: none; margin-top: 30px; padding: 30px; background: #fffcf5; border: 2px solid #8B4513; border-radius: 15px; box-shadow: 0 10px 30px rgba(139,69,19,0.1);">
+        
+        <h2 style="color: #8B4513; text-align: center; font-size: 24px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">🔍 您的中医体质辨识报告</h2>
+        
+        <div id="scoreDetails" style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #f0e0d0; line-height: 1.8;">
+            </div>
+
+        <div style="margin-top: 30px; text-align: center; border-top: 2px dashed #e0c0a0; padding-top: 25px;">
+            <p style="color: #d32f2f; font-weight: bold; font-size: 20px; margin: 0;">🎁 限时礼包：专属调理方案</p>
+            <p style="color: #666; font-size: 16px; margin: 10px 0;">由于每个人的体质细节不同，系统无法给出完整方药。</p>
+            <p style="color: #333; font-weight: bold; background: #fff4e5; display: inline-block; padding: 5px 15px; border-radius: 20px;">请【截图保存】上方分数，扫码咨询管家</p>
+            
+            <div style="margin: 20px auto; width: 200px; padding: 10px; background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #eee;">
+                <img src="my-qr.png" alt="微信二维码" style="width: 100%; height: auto; display: block; border-radius: 5px;">
+            </div>
+
+            <p style="color: #8B4513; font-size: 15px; font-weight: bold;">[ 社区健康管家 · 为您守候 ]</p>
+            <p style="color: #999; font-size: 12px; margin-top: 10px;">依据 GB/T 46939-2025 《中医体质分类与判定》国标生成</p>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+            <button onclick="window.print()" style="background: #666; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;">打印报告</button>
+            <button onclick="location.reload()" style="background: #8B4513; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;">重新测试</button>
+        </div>
     </div>
+    
 </div>
 
 <script>
