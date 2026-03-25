@@ -3,63 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>中医体质辨识自测系统 (GB/T 46939-2025)</title>
+    <title>AI 智能中医体质辨识报告</title>
     <style>
-        :root { --primary-color: #8B4513; --bg-color: #FDF5E6; }
-        body { font-family: "Microsoft YaHei", sans-serif; background-color: var(--bg-color); color: #333; margin: 0; padding: 15px; line-height: 1.6; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary-color); font-size: 22px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; margin-top: 0; }
-        .intro { background: #fff9f0; padding: 12px; border-radius: 8px; font-size: 14px; margin-bottom: 20px; color: #666; text-align: center; }
-        .question-group { margin-bottom: 20px; padding: 15px; border: 1px solid #f0f0f0; border-radius: 10px; }
-        .question-title { font-weight: bold; font-size: 17px; margin-bottom: 15px; display: block; color: #444; }
-        .options { display: flex; justify-content: space-between; gap: 5px; }
-        .option-item { flex: 1; text-align: center; position: relative; }
-        .option-item input { width: 22px; height: 22px; cursor: pointer; margin-bottom: 5px; }
-        .option-item label { display: block; font-size: 12px; color: #666; cursor: pointer; white-space: nowrap; }
-        .submit-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 20px; }
-        #resultArea { display: none; margin-top: 30px; padding: 25px; background: #fffcf5; border: 2px solid #8B4513; border-radius: 15px; }
-        .constitution-item { margin-bottom: 8px; font-size: 15px; border-bottom: 1px dashed #eee; padding-bottom: 5px; }
-        .high-light { color: #d32f2f; font-weight: bold; }
-        @media (max-width: 480px) { .option-item label { font-size: 11px; transform: scale(0.9); } }
+        :root { --primary-color: #8B4513; --accent-color: #d32f2f; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f4f1ea; color: #333; margin: 0; padding: 15px; }
+        .container { max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        /* 问卷样式 */
+        .question-group { margin-bottom: 20px; padding: 15px; border-radius: 12px; background: #fffcf9; border: 1px solid #f0e6dc; }
+        .question-title { font-weight: bold; font-size: 17px; margin-bottom: 12px; display: block; color: #5d4037; }
+        .options { display: flex; justify-content: space-between; }
+        .option-item { flex: 1; text-align: center; }
+        .option-item input { width: 20px; height: 20px; }
+        .option-item label { display: block; font-size: 11px; color: #888; margin-top: 5px; }
+
+        /* AI 总结页面样式 */
+        #resultArea { display: none; animation: fadeIn 0.8s ease; }
+        .report-card { background: linear-gradient(135deg, #fffcf5 0%, #f7eee2 100%); border-radius: 15px; padding: 25px; border: 1px solid #e0c0a0; position: relative; overflow: hidden; }
+        .report-card::before { content: "AI 智能分析"; position: absolute; top: 10px; right: -30px; background: #d32f2f; color: white; padding: 5px 40px; transform: rotate(45deg); font-size: 12px; }
+        .main-constitution { font-size: 28px; color: #8B4513; font-weight: bold; text-align: center; margin: 10px 0; }
+        .ai-summary { background: white; border-left: 4px solid #8B4513; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0; font-style: italic; color: #555; }
+        .advice-section { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .advice-box { background: white; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .advice-box h4 { margin: 0 0 8px 0; color: #8B4513; font-size: 15px; display: flex; align-items: center; }
+        
+        .submit-btn { width: 100%; padding: 18px; background: #8B4513; color: white; border: none; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .submit-btn:hover { background: #5d4037; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>社区居民中医体质辨识自测</h1>
-    <p class="intro">依据 GB/T 46939-2025 标准<br>请根据您<strong>近一年</strong>的真实感受回答</p>
-    
-    <form id="quizForm">
-        <div id="questionsContainer"></div>
-        <button type="button" class="submit-btn" onclick="calculateResult()">生成辨识报告</button>
-    </form>
+<div class="container" id="mainContainer">
+    <div id="quizSection">
+        <h1 style="text-align: center; color: #8B4513;">中医体质 AI 智能辨识</h1>
+        <p style="text-align: center; color: #999; font-size: 13px;">依据 GB/T 46939-2025 国标标准</p>
+        <form id="quizForm">
+            <div id="questionsContainer"></div>
+            <button type="button" class="submit-btn" onclick="generateAIReport()">开始智能分析</button>
+        </form>
+    </div>
 
     <div id="resultArea">
-        <h2 style="color: #8B4513; text-align: center; margin-top: 0;">🔍 您的辨识报告</h2>
-        <div id="scoreDetails" style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #f0e0d0;"></div>
-
-        <div style="margin-top: 25px; text-align: center; border-top: 2px dashed #e0c0a0; padding-top: 20px;">
-            <p style="color: #d32f2f; font-weight: bold; font-size: 18px; margin: 0;">🎁 获取专属调理方案</p>
-            <p style="color: #666; font-size: 14px; margin: 10px 0;">请【截图保存】上方分数，扫码咨询管家</p>
+        <div class="report-card">
+            <div style="text-align: center; color: #666; font-size: 14px;">辨识结果：您的核心体质为</div>
+            <div id="targetConstitution" class="main-constitution">加载中...</div>
             
-            <div style="margin: 15px auto; width: 180px; padding: 10px; background: white; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee;">
-                <img src="my-qr.png" alt="微信二维码" style="width: 100%; height: auto; display: block;">
-            </div>
+            <div class="ai-summary" id="aiDescription">
+                </div>
 
-            <p style="color: #8B4513; font-size: 14px; font-weight: bold;">[ 社区健康管家 · 竭诚为您服务 ]</p>
+            <div class="advice-section">
+                <div class="advice-box">
+                    <h4>🥣 饮食调养</h4>
+                    <p id="foodAdvice" style="font-size: 13px; margin: 0; color: #666;"></p>
+                </div>
+                <div class="advice-box">
+                    <h4>🏃 运动建议</h4>
+                    <p id="sportAdvice" style="font-size: 13px; margin: 0; color: #666;"></p>
+                </div>
+            </div>
         </div>
 
-        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
-            <button onclick="window.print()" style="padding: 8px 15px; border-radius: 5px; border: 1px solid #ccc; background: white;">打印</button>
-            <button onclick="location.reload()" style="padding: 8px 15px; border-radius: 5px; border: none; background: #8B4513; color: white;">重新测</button>
+        <div style="margin-top: 25px; text-align: center;">
+            <p style="font-size: 14px; color: #8B4513; font-weight: bold;">您的专属健康档案已生成</p>
+            <img src="my-qr.png" style="width: 150px; border-radius: 10px; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+            <p style="font-size: 12px; color: #999;">长按识别二维码，联系管家领取完整调理方</p>
+            <button onclick="location.reload()" style="margin-top: 15px; background: none; border: 1px solid #ccc; padding: 5px 15px; border-radius: 20px; font-size: 12px;">重新测评</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 标准选项描述
-    const optionLabels = ["没有", "很少", "有时", "经常", "总是"];
+    // 1. 体质知识库（结合国标描述）
+    const db = {
+        "平和": {
+            desc: "阴阳气血调和，面色润泽，精力充沛。您是健康的‘优等生’，只需保持现状，顺应四季养生即可。",
+            food: "饮食清淡，不宜过饥过饱，多食谷物蔬菜。",
+            sport: "适度运动，如慢跑、打球，持之以恒。"
+        },
+        "气虚": {
+            desc: "元气不足，容易疲乏，气短懒言。您就像一块容量变小的电池，需要补气培元。",
+            food: "多食山药、大枣、黄芪鸡汤，少吃生冷。",
+            sport: "不宜大汗淋漓，推荐八段锦、散步。"
+        },
+        "阳虚": {
+            desc: "阳气不足，畏寒怕冷，手脚发凉。您的身体缺乏‘火种’，需要温补脾肾，驱散寒邪。",
+            food: "宜吃牛羊肉、生姜、韭菜。忌冷饮。",
+            sport: "适度阳光下运动，睡前坚持艾草泡脚。"
+        },
+        "阴虚": {
+            desc: "阴液亏少，口干咽燥，手足心热。您的身体就像干涸的土地，需要滋阴润燥，忌熬夜。",
+            food: "多吃银耳、百合、梨、枸杞。少吃辛辣。",
+            sport: "适宜游泳、瑜伽等静谧运动，控制出汗。"
+        },
+        "痰湿": {
+            desc: "痰湿凝聚，腹部肥满，感觉身体沉重。您的代谢系统需要‘除湿排水’，恢复轻盈。",
+            food: "多食赤小豆、薏米、冬瓜、山楂。戒甜食。",
+            sport: "必须增加运动强度，每日保持微汗状态。"
+        },
+        "湿热": {
+            desc: "湿热内蕴，面部油腻，口苦口臭。您的身体像闷热的桑拿房，需要清热化湿。",
+            food: "多食绿豆、苦瓜、芹菜。禁烟酒及油炸。",
+            sport: "适合高强度运动，如跑步、游泳，排泄湿热。"
+        },
+        "血瘀": {
+            desc: "血行不畅，面色晦暗，容易出现青紫斑。您的血液循环需要‘疏通血管’，活血化瘀。",
+            food: "多吃山楂、黑豆、红糖、葡萄酒。少油腻。",
+            sport: "坚持慢跑、太极等能促进全身血行的运动。"
+        },
+        "气郁": {
+            desc: "气机郁滞，多愁善感，胸胁胀满。您的情绪之火被压制，需要疏肝解郁，放平心态。",
+            food: "多喝玫瑰花茶、佛手茶。多食柑橘、洋葱。",
+            sport: "多参加集体运动，如广场舞、户外登山。"
+        },
+        "特禀": {
+            desc: "先天禀赋特殊，易过敏。您的免疫系统过于‘敏感’，需要增强体质，避开过敏源。",
+            food: "饮食宜清淡，忌食辛辣、海鲜等发物。",
+            sport: "适度锻炼，提高免疫力，避免剧烈环境变化。"
+        }
+    };
 
+    // 2. 问卷逻辑（保持 25 题国标简化版）
     const questions = [
         {id: 1, text: "您精力充沛吗？", types: ["平和"]},
         {id: 2, text: "您容易疲乏吗？", types: ["平和", "气虚"]},
@@ -79,7 +144,7 @@
         {id: 16, text: "您小便时尿道有发热感或尿色深吗？", types: ["湿热"]},
         {id: 17, text: "您白带发黄/阴囊部位潮湿吗？", types: ["湿热"]},
         {id: 18, text: "您身体上有哪里疼痛吗？", types: ["血瘀"]},
-        {id: 19, text: "您面面色晦暗或容易出现褐斑吗？", types: ["血瘀"]},
+        {id: 19, text: "您面色晦暗或容易出现褐斑吗？", types: ["血瘀"]},
         {id: 20, text: "您口唇颜色偏暗吗？", types: ["血瘀"]},
         {id: 21, text: "您容易精神紧张、焦虑不安吗？", types: ["气郁"]},
         {id: 22, text: "您多愁善感、感情脆弱吗？", types: ["气郁"]},
@@ -89,63 +154,51 @@
     ];
 
     const container = document.getElementById('questionsContainer');
-    questions.forEach((q, index) => {
+    questions.forEach((q, idx) => {
         const html = `
-            <div class="question-group">
-                <span class="question-title">${index + 1}. ${q.text}</span>
-                <div class="options">
-                    ${[1, 2, 3, 4, 5].map(v => `
-                        <div class="option-item">
-                            <input type="radio" name="q${q.id}" value="${v}" id="q${q.id}_${v}" required>
-                            <label for="q${q.id}_${v}">${optionLabels[v-1]}</label>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>`;
+        <div class="question-group">
+            <span class="question-title">${idx+1}. ${q.text}</span>
+            <div class="options">
+                ${[1,2,3,4,5].map(v => `<div class="option-item"><input type="radio" name="q${q.id}" value="${v}" required><label>${["没有","很少","有时","经常","总是"][v-1]}</label></div>`).join('')}
+            </div>
+        </div>`;
         container.insertAdjacentHTML('beforeend', html);
     });
 
-    function calculateResult() {
+    // 3. 核心生成逻辑
+    function generateAIReport() {
         const form = document.getElementById('quizForm');
-        if (!form.checkValidity()) {
-            alert("请回答完所有问题哦！");
-            return;
-        }
+        if (!form.checkValidity()) { alert("请完成所有题目以便 AI 准确分析"); return; }
 
         const scores = { "平和": 0, "气虚": 0, "阳虚": 0, "阴虚": 0, "痰湿": 0, "湿热": 0, "血瘀": 0, "气郁": 0, "特禀": 0 };
         const counts = { "平和": 4, "气虚": 3, "阳虚": 3, "阴虚": 3, "痰湿": 3, "湿热": 3, "血瘀": 3, "气郁": 3, "特禀": 3 };
 
         questions.forEach(q => {
             let val = parseInt(document.querySelector(`input[name="q${q.id}"]:checked`).value);
-            q.types.forEach(type => {
-                if (type === "平和" && [2, 3, 4].includes(q.id)) {
-                    scores[type] += (6 - val);
-                } else {
-                    scores[type] += val;
-                }
-            });
+            q.types.forEach(t => scores[t] += (t === "平和" && [2,3,4].includes(q.id)) ? (6-val) : val);
         });
 
-        let results = [];
+        // 计算最高分体质（排除平和质，若其他都低则为平和）
+        let maxType = "平和";
+        let maxScore = -1;
         for (let type in scores) {
-            let convertScore = ((scores[type] - counts[type]) / (counts[type] * 4) * 100).toFixed(1);
-            results.push({ name: type, score: parseFloat(convertScore) });
-        }
-
-        document.getElementById('resultArea').style.display = 'block';
-        let html = "<p style='font-weight:bold; color:#8B4513; margin-bottom:10px;'>测评得分如下：</p>";
-        
-        results.forEach(res => {
-            let status = "";
-            if (res.name !== "平和") {
-                if (res.score >= 40) status = "<span class='high-light'>【确认为该体质】</span>";
-                else if (res.score >= 30) status = "<span style='color:#e6a23c'>【倾向是】</span>";
+            let convertScore = ((scores[type] - counts[type]) / (counts[type] * 4) * 100);
+            if (type !== "平和" && convertScore > maxScore) {
+                maxScore = convertScore;
+                maxType = type;
             }
-            html += `<div class="constitution-item">${res.name}质：${res.score}分 ${status}</div>`;
-        });
+        }
+        if (maxScore < 30) maxType = "平和";
+
+        // 填充页面
+        document.getElementById('quizSection').style.display = 'none';
+        document.getElementById('resultArea').style.display = 'block';
+        document.getElementById('targetConstitution').innerText = maxType + "质";
+        document.getElementById('aiDescription').innerText = "【AI 体质深度解读】： " + db[maxType].desc;
+        document.getElementById('foodAdvice').innerText = db[maxType].food;
+        document.getElementById('sportAdvice').innerText = db[maxType].sport;
         
-        document.getElementById('scoreDetails').innerHTML = html;
-        window.scrollTo({ top: document.getElementById('resultArea').offsetTop, behavior: 'smooth' });
+        window.scrollTo(0, 0);
     }
 </script>
 </body>
