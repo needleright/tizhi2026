@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社区中医体质辨识自测系统 (GB/T 46939-2025)</title>
+    <style>
+        :root { --primary-color: #8B4513; --bg-color: #FDF5E6; }
+        body { font-family: "Microsoft YaHei", sans-serif; background-color: var(--bg-color); color: #333; margin: 0; padding: 20px; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary-color); font-size: 24px; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px; }
+        .intro { background: #fff9f0; padding: 15px; border-radius: 8px; font-size: 15px; margin-bottom: 25px; color: #666; }
+        .question-group { margin-bottom: 25px; padding: 15px; border-bottom: 1px solid #eee; }
+        .question-title { font-weight: bold; font-size: 18px; margin-bottom: 12px; display: block; }
+        .options { display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .option-item { flex: 1; text-align: center; min-width: 60px; }
+        input[type="radio"] { width: 20px; height: 20px; cursor: pointer; }
+        label { display: block; font-size: 13px; margin-top: 5px; cursor: pointer; }
+        .submit-btn { display: block; width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 30px; }
+        #resultArea { display: none; margin-top: 30px; padding: 20px; background: #f0f9eb; border-radius: 10px; border: 2px solid #67c23a; }
+        .constitution-item { margin-bottom: 10px; font-size: 16px; }
+        .high-light { color: #d32f2f; font-weight: bold; }
+        @media (max-width: 600px) { .options { display: grid; grid-template-columns: repeat(5, 1fr); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>社区居民中医体质辨识自测</h1>
+    <p class="intro">说明：请根据您<strong>近一年</strong>的真实感受回答。1为“根本不”，5为“非常”。</p>
+    
+    <form id="quizForm">
+        <div id="questionsContainer"></div>
+        <button type="button" class="submit-btn" onclick="calculateResult()">查看辨识结果</button>
+    </form>
+
+    <div id="resultArea">
+        <h2 style="color: var(--primary-color); text-align: center;">辨识结论</h2>
+        <div id="scoreDetails"></div>
+        <hr>
+        <p style="font-size: 14px; color: #666;">*注：本结论基于 GB/T 46939-2025 标准计算。请咨询社区中医师进行专业解读。</p>
+        <button onclick="window.print()" style="padding: 5px 15px;">打印报告</button>
+    </div>
+</div>
+
+<script>
+    // 定义题目和所属维度
+    const questions = [
+        {id: 1, text: "您精力充沛吗？", types: ["平和"]},
+        {id: 2, text: "您容易疲乏吗？", types: ["平和", "气虚"]},
+        {id: 3, text: "您感到闷闷不乐、情绪低沉吗？", types: ["平和", "气郁"]},
+        {id: 4, text: "您比一般人耐受不了寒冷吗？", types: ["平和", "阳虚"]},
+        {id: 5, text: "您容易气短（接不上气）吗？", types: ["气虚"]},
+        {id: 6, text: "您容易心慌吗？", types: ["气虚"]},
+        {id: 7, text: "您胃部、背部或腰膝部怕冷吗？", types: ["阳虚"]},
+        {id: 8, text: "您怕冷、衣服比别人穿得多吗？", types: ["阳虚"]},
+        {id: 9, text: "您感觉身体、脸上发热吗？", types: ["阴虚"]},
+        {id: 10, text: "您皮肤或口唇干吗？", types: ["阴虚"]},
+        {id: 11, text: "您面部两颧发红吗？", types: ["阴虚"]},
+        {id: 12, text: "您感到身体沉重、不爽快吗？", types: ["痰湿"]},
+        {id: 13, text: "您腹部肥满松软吗？", types: ["痰湿"]},
+        {id: 14, text: "您嘴里有黏黏的感觉吗？", types: ["痰湿"]},
+        {id: 15, text: "您面部或鼻部油腻发光吗？", types: ["湿热"]},
+        {id: 16, text: "您小便时尿道有发热感或尿色深吗？", types: ["湿热"]},
+        {id: 17, text: "您白带发黄/阴囊部位潮湿吗？", types: ["湿热"]},
+        {id: 18, text: "您身体上有哪里疼痛吗？", types: ["血瘀"]},
+        {id: 19, text: "您面色晦暗或容易出现褐斑吗？", types: ["血瘀"]},
+        {id: 20, text: "您口唇颜色偏暗吗？", types: ["血瘀"]},
+        {id: 21, text: "您容易精神紧张、焦虑不安吗？", types: ["气郁"]},
+        {id: 22, text: "您多愁善感、感情脆弱吗？", types: ["气郁"]},
+        {id: 23, text: "您没感冒也会打喷嚏吗？", types: ["特禀"]},
+        {id: 24, text: "您容易过敏（药物/食物/花粉等）吗？", types: ["特禀"]},
+        {id: 25, text: "您的皮肤容易起荨麻疹或一抓就红吗？", types: ["特禀"]}
+    ];
+
+    // 初始化渲染题目
+    const container = document.getElementById('questionsContainer');
+    questions.forEach((q, index) => {
+        const html = `
+            <div class="question-group">
+                <span class="question-title">${index + 1}. ${q.text}</span>
+                <div class="options">
+                    ${[1, 2, 3, 4, 5].map(v => `
+                        <div class="option-item">
+                            <input type="radio" name="q${q.id}" value="${v}" id="q${q.id}_${v}" required>
+                            <label for="q${q.id}_${v}">${v==1?'不':v==5?'非常':v}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+
+    function calculateResult() {
+        const form = document.getElementById('quizForm');
+        if (!form.checkValidity()) {
+            alert("请回答所有问题后再提交。");
+            return;
+        }
+
+        // 收集各维度原始分
+        const scores = { "平和": 0, "气虚": 0, "阳虚": 0, "阴虚": 0, "痰湿": 0, "湿热": 0, "血瘀": 0, "气郁": 0, "特禀": 0 };
+        const counts = { "平和": 4, "气虚": 3, "阳虚": 3, "阴虚": 3, "痰湿": 3, "湿热": 3, "血瘀": 3, "气郁": 3, "特禀": 3 };
+
+        questions.forEach(q => {
+            let val = parseInt(document.querySelector(`input[name="q${q.id}"]:checked`).value);
+            q.types.forEach(type => {
+                // 平和质的2,3,4题是反向计分
+                if (type === "平和" && [2, 3, 4].includes(q.id)) {
+                    scores[type] += (6 - val);
+                } else {
+                    scores[type] += val;
+                }
+            });
+        });
+
+        // 转化分公式计算
+        let results = [];
+        for (let type in scores) {
+            let convertScore = ((scores[type] - counts[type]) / (counts[type] * 4) * 100).toFixed(1);
+            results.push({ name: type, score: convertScore });
+        }
+
+        // 显示结果
+        const resultArea = document.getElementById('resultArea');
+        const scoreDetails = document.getElementById('scoreDetails');
+        resultArea.style.display = 'block';
+        
+        let html = "<h3>您的体质得分情况：</h3>";
+        results.forEach(res => {
+            let status = "";
+            if (res.name !== "平和") {
+                if (res.score >= 40) status = "<span class='high-light'>【确认为该体质】</span>";
+                else if (res.score >= 30) status = "【倾向是】";
+            }
+            html += `<div class="constitution-item">${res.name}质：${res.score} 分 ${status}</div>`;
+        });
+        
+        scoreDetails.innerHTML = html;
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+</script>
+</body>
+</html>
